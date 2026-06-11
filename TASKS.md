@@ -10,7 +10,7 @@
 |---|---|---|---|
 | P0-T00 | Initialise git repository | Create git repo, add Next.js .gitignore, commit the four foundation files, create GitHub repo `translation-platform`, push | done |
 | P0-T01 | Initialise Next.js project | Create Next.js 14 App Router project with TypeScript strict mode, Tailwind CSS, and shadcn/ui | done |
-| P0-T02 | Prisma schema + database connection | Write the full Prisma schema from ARCHITECTURE.md §4, connect to AWS RDS PostgreSQL 15, run initial migration | todo |
+| P0-T02 | Prisma schema + database connection | Write the full Prisma schema from ARCHITECTURE.md §4, connect to AWS RDS PostgreSQL 15, run initial migration | done |
 | P0-T03 | AWS S3 bucket setup | Create S3 bucket, configure 30-day lifecycle deletion policy, set up IAM credentials for app access | todo |
 | P0-T04 | AWS SES setup | Verify sender domain, configure SES for transactional email, create reusable send helper | todo |
 | P0-T05 | NextAuth.js translator auth | Configure NextAuth.js with email/password credentials provider and Prisma adapter; protect all /translator/* routes via middleware | todo |
