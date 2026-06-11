@@ -103,4 +103,10 @@ If a task touches an open question from PRD.md Section 13:
 
 ---
 
+## 7. Known Compatibility Issues
+
+- **shadcn v4 + Next.js 14 / Tailwind v3:** The shadcn v4 CLI generates Tailwind v4 syntax (`@import "shadcn/tailwind.css"`, opacity modifiers on CSS variables) which is incompatible with Next.js 14 + Tailwind v3. When adding new components via `npx shadcn add <component>`, the generated CSS and Tailwind config may need patching. Always run `npm run build` after adding any shadcn component and fix any PostCSS errors before committing.
+
+---
+
 *CURSOR_RULES.md — MVP v1.0 — June 2026*

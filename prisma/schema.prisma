@@ -1,0 +1,137 @@
+// Translation Platform — Prisma Schema
+// Source of truth: ARCHITECTURE.md §4
+// Do not remove fields without founder approval.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Translator {
+  id              String         @id @default(cuid())
+  name            String
+  email           String         @unique
+  phone           String?
+  passwordHash    String
+  naatiCpn        String         @unique
+  naatiStatus     NaatiStatus    @default(PENDING)
+  languagePairs   LanguagePair[]
+  isAvailable     Boolean        @default(false)
+  stripeAccountId String?
+  jobs            Job[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Order {
+  id               String           @id @default(cuid())
+  customerEmail    String
+  documentCategory DocumentCategory
+  documentType     String
+  countryOfIssue   String
+  sourceLanguage   String
+  status           OrderStatus      @default(PENDING)
+  stripePriceAud   Int              // In cents
+  stripePaymentId  String?
+  invoiceEmailed   Boolean          @default(false)
+  s3DocumentKey    String?          // Deleted after 30 days
+  s3DeleteScheduled DateTime?
+  aiConsent        Boolean          @default(false)
+  job              Job?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Job {
+  id                String     @id @default(cuid())
+  order             Order      @relation(fields: [orderId], references: [id])
+  orderId           String     @unique
+  translator        Translator? @relation(fields: [translatorId], references: [id])
+  translatorId      String?
+  status            JobStatus  @default(UNASSIGNED)
+  aiDraftS3Key      String?    // Generated .docx draft
+  certifiedPdfS3Key String?    // Final certified PDF from translator
+  extractionJson    Json?      // Raw AI extraction output — retained for QA
+  confidenceLogs    Json?      // Per-field confidence scores
+  slaDeadline       DateTime?
+  slaClockPaused    Boolean    @default(false)
+  notificationsSent Int        @default(0)
+  lastNotifiedAt    DateTime?
+  reviewTimeSeconds Int?       // Measured at completion for beta validation
+  flaggedIssue      String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model LanguagePair {
+  id             String     @id @default(cuid())
+  translator     Translator @relation(fields: [translatorId], references: [id])
+  translatorId   String
+  sourceLanguage String
+  targetLanguage String     @default("en")
+
+  @@unique([translatorId, sourceLanguage, targetLanguage])
+}
+
+model GlossaryEntry {
+  id             String   @id @default(cuid())
+  sourceLanguage String
+  documentType   String
+  sourceLabel    String
+  englishLabel   String
+  confirmedCount Int      @default(1)
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([sourceLanguage, documentType, sourceLabel])
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String
+  language  String
+  createdAt DateTime @default(now())
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum NaatiStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+enum DocumentCategory {
+  IDENTITY // Tier 1 — driver's licence, passport, ID card
+  STANDARD // Tier 2 — birth cert, marriage cert, police clearance
+  COMPLEX  // Tier 3 — academic transcripts, multi-page
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  IN_PROGRESS
+  DELIVERED
+  DISPUTED
+  REFUNDED
+}
+
+enum JobStatus {
+  UNASSIGNED
+  NOTIFIED
+  ACCEPTED
+  IN_REVIEW
+  GENERATING
+  CERTIFYING
+  COMPLETE
+  FLAGGED
+  REASSIGNED
+}
